@@ -577,11 +577,14 @@ function renderPosGrid() {
 
   const pag = document.getElementById('pag-pos');
   if (total <= 1) { pag.innerHTML = ''; return; }
-  let btns = `<button class="btn-pag" onclick="irPagPos(${pagPos-1})" ${pagPos===1?'disabled':''}>‹</button>`;
-  for (let i = 1; i <= total; i++)
-    btns += `<button class="btn-pag ${i===pagPos?'activo':''}" onclick="irPagPos(${i})">${i}</button>`;
-  btns += `<button class="btn-pag" onclick="irPagPos(${pagPos+1})" ${pagPos===total?'disabled':''}>›</button>`;
-  pag.innerHTML = btns;
+  let h = `<button class="btn-pag-i" onclick="irPagPos(${pagPos-1})" ${pagPos===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (total > 8 && Math.abs(i - pagPos) > 2 && i !== 1 && i !== total) { h += '…'; continue; }
+    h += `<button class="btn-pag-i ${i===pagPos?'activo':''}" onclick="irPagPos(${i})">${i}</button>`;
+  }
+  h += `<button class="btn-pag-i" onclick="irPagPos(${pagPos+1})" ${pagPos===total?'disabled':''}>›</button>`;
+  h += `<span class="pag-info-i">${filtrados.length} productos · pág ${pagPos}/${total}</span>`;
+  pag.innerHTML = h;
 }
 
 function irPagPos(n) {
