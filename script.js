@@ -56,14 +56,16 @@ let carrito    = [];
 let idEliminar = null;
 let catActivaPos = '';
 let pagInv     = 1;
-let pagAlertas = 1;
+let pagAlertas  = 1;
 let pagReabasto = 1;
+let pagPos      = 1;
 let _alertasTodas     = [];
 let _reabastoFiltrados = [];
 let _reabastoState     = {}; // { id: { checked, cantidad } }
 const POR_PAG_INV      = 50;
 const POR_PAG_ALERTAS  = 25;
 const POR_PAG_REABASTO = 25;
+const POR_PAG_POS      = 15;
 
 // ===== INICIO =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -116,8 +118,8 @@ function restaurarRespaldo(event) {
       const datos = JSON.parse(e.target.result);
       if (!Array.isArray(datos)) throw new Error();
       ['ferreteriaProductos','ferreteriaVentas','ferreteriaCortes',
-       'ferreteriaOrdenes','ferreteriaOrdenFolio','ferreteriaPagosProveedores',
-       'ferreteriaFolioVenta'].forEach(k => localStorage.removeItem(k));
+       'ferreteriaOrdenes','ferreteriaOrdenFolio','ferreteriaPagosProveedor',
+       'ferreteriaFolio'].forEach(k => localStorage.removeItem(k));
       localStorage.setItem('ferreteriaProductos', JSON.stringify(datos));
       toast('Inventario cargado. Recargando...', 'ok', 2000);
       setTimeout(() => location.reload(), 2000);
@@ -170,6 +172,7 @@ function iniciarEventos() {
   let _posBusTimer;
   document.getElementById('pos-buscador').addEventListener('input', () => {
     clearTimeout(_posBusTimer);
+    pagPos = 1;
     _posBusTimer = setTimeout(renderPosGrid, 200);
   });
   document.getElementById('btn-cobrar').addEventListener('click', procesarVenta);
@@ -541,6 +544,7 @@ function renderPosCategorias() {
 
 function filtrarCatPos(cat) {
   catActivaPos = cat;
+  pagPos = 1;
   document.querySelectorAll('#pos-categorias .cat-btn').forEach(btn => {
     btn.classList.toggle('activo', btn.dataset.cat === cat);
   });
@@ -555,8 +559,13 @@ function renderPosGrid() {
     return coincide && cat;
   });
 
+  const total  = Math.ceil(filtrados.length / POR_PAG_POS) || 1;
+  if (pagPos > total) pagPos = total;
+  const ini    = (pagPos - 1) * POR_PAG_POS;
+  const pagina = filtrados.slice(ini, ini + POR_PAG_POS);
+
   const grid = document.getElementById('pos-grid');
-  grid.innerHTML = filtrados.length ? filtrados.map(p => `
+  grid.innerHTML = pagina.length ? pagina.map(p => `
     <div class="pos-producto-card ${p.cantidad <= 0 ? 'sin-stock' : ''}"
          onclick="agregarAlCarrito('${p.id}')">
       <p class="pos-prod-nombre">${p.nombre}</p>
@@ -565,6 +574,26 @@ function renderPosGrid() {
       <p class="pos-prod-stock">${p.cantidad <= 0 ? '❌ Sin stock' : `Stock: ${p.cantidad} ${p.unidad}`}</p>
     </div>`).join('')
   : '<p style="color:var(--texto-gris);font-size:12px;padding:20px">No hay productos</p>';
+
+  const pag = document.getElementById('pag-pos');
+  if (total <= 1) { pag.innerHTML = ''; return; }
+  let btns = `<button class="btn-pag" onclick="irPagPos(${pagPos-1})" ${pagPos===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= total; i++)
+    btns += `<button class="btn-pag ${i===pagPos?'activo':''}" onclick="irPagPos(${i})">${i}</button>`;
+  btns += `<button class="btn-pag" onclick="irPagPos(${pagPos+1})" ${pagPos===total?'disabled':''}>›</button>`;
+  pag.innerHTML = btns;
+}
+
+function irPagPos(n) {
+  const busq = document.getElementById('pos-buscador').value.toLowerCase();
+  const filtrados = productos.filter(p => {
+    const coincide = p.nombre.toLowerCase().includes(busq) || (p.codigo || '').toLowerCase().includes(busq);
+    const cat = !catActivaPos || p.categoria === catActivaPos;
+    return coincide && cat;
+  });
+  const total = Math.ceil(filtrados.length / POR_PAG_POS) || 1;
+  pagPos = Math.max(1, Math.min(n, total));
+  renderPosGrid();
 }
 
 function agregarAlCarrito(id) {
