@@ -95,23 +95,16 @@ function toast(msg, tipo = 'ok', ms = 3500) {
 
 // ===== RESPALDO =====
 function exportarRespaldo() {
-  const datos = {
-    productos:          localStorage.getItem('ferreteriaProductos'),
-    ventas:             localStorage.getItem('ferreteriaVentas'),
-    cortes:             localStorage.getItem('ferreteriaCortes'),
-    ordenes:            localStorage.getItem('ferreteriaOrdenes'),
-    folio:              localStorage.getItem('ferreteriaOrdenFolio'),
-    pagos:              localStorage.getItem('ferreteriaPagosProveedores'),
-    folioVenta:         localStorage.getItem('ferreteriaFolioVenta'),
-  };
-  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+  const datos = localStorage.getItem('ferreteriaProductos');
+  if (!datos || datos === '[]') { toast('No hay productos para exportar', 'error'); return; }
+  const blob = new Blob([datos], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `respaldo-ferreteria-${hoy()}.json`;
+  a.download = `inventario-respaldo-${hoy()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('Respaldo exportado correctamente', 'ok');
+  toast('Inventario exportado correctamente', 'ok');
 }
 
 function restaurarRespaldo(event) {
@@ -121,14 +114,9 @@ function restaurarRespaldo(event) {
   reader.onload = e => {
     try {
       const datos = JSON.parse(e.target.result);
-      if (datos.productos)  localStorage.setItem('ferreteriaProductos', datos.productos);
-      if (datos.ventas)     localStorage.setItem('ferreteriaVentas', datos.ventas);
-      if (datos.cortes)     localStorage.setItem('ferreteriaCortes', datos.cortes);
-      if (datos.ordenes)    localStorage.setItem('ferreteriaOrdenes', datos.ordenes);
-      if (datos.folio)      localStorage.setItem('ferreteriaOrdenFolio', datos.folio);
-      if (datos.pagos)      localStorage.setItem('ferreteriaPagosProveedores', datos.pagos);
-      if (datos.folioVenta) localStorage.setItem('ferreteriaFolioVenta', datos.folioVenta);
-      toast('Respaldo restaurado. Recargando...', 'ok', 2000);
+      if (!Array.isArray(datos)) throw new Error();
+      localStorage.setItem('ferreteriaProductos', JSON.stringify(datos));
+      toast('Inventario restaurado. Recargando...', 'ok', 2000);
       setTimeout(() => location.reload(), 2000);
     } catch { toast('Archivo inválido', 'error'); }
   };
