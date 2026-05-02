@@ -96,17 +96,29 @@ function toast(msg, tipo = 'ok', ms = 3500) {
 }
 
 // ===== RESPALDO =====
+const _CLAVES_RESPALDO = [
+  'ferreteriaProductos',
+  'ferreteriaVentas',
+  'ferreteriaCortes',
+  'ferreteriaOrdenes',
+  'ferreteriaOrdenFolio',
+  'ferreteriaPagosProveedor',
+  'ferreteriaFolio',
+];
+
 function exportarRespaldo() {
-  const datos = localStorage.getItem('ferreteriaProductos');
-  if (!datos || datos === '[]') { toast('No hay productos para exportar', 'error'); return; }
-  const blob = new Blob([datos], { type: 'application/json' });
+  const datos = {};
+  _CLAVES_RESPALDO.forEach(k => { datos[k] = localStorage.getItem(k); });
+  const vacio = !datos.ferreteriaProductos || datos.ferreteriaProductos === '[]';
+  if (vacio) { toast('No hay datos para exportar', 'error'); return; }
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `inventario-respaldo-${hoy()}.json`;
+  a.download = `respaldo-ferreteria-${hoy()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('Inventario exportado correctamente', 'ok');
+  toast('Respaldo completo exportado correctamente', 'ok');
 }
 
 function restaurarRespaldo(event) {
@@ -116,12 +128,10 @@ function restaurarRespaldo(event) {
   reader.onload = e => {
     try {
       const datos = JSON.parse(e.target.result);
-      if (!Array.isArray(datos)) throw new Error();
-      ['ferreteriaProductos','ferreteriaVentas','ferreteriaCortes',
-       'ferreteriaOrdenes','ferreteriaOrdenFolio','ferreteriaPagosProveedor',
-       'ferreteriaFolio'].forEach(k => localStorage.removeItem(k));
-      localStorage.setItem('ferreteriaProductos', JSON.stringify(datos));
-      toast('Inventario cargado. Recargando...', 'ok', 2000);
+      if (typeof datos !== 'object' || Array.isArray(datos)) throw new Error();
+      _CLAVES_RESPALDO.forEach(k => localStorage.removeItem(k));
+      _CLAVES_RESPALDO.forEach(k => { if (datos[k] != null) localStorage.setItem(k, datos[k]); });
+      toast('Respaldo restaurado. Recargando...', 'ok', 2000);
       setTimeout(() => location.reload(), 2000);
     } catch { toast('Archivo inválido', 'error'); }
   };
