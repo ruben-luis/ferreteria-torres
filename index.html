@@ -45,9 +45,14 @@
         <span class="nav-icono">📥</span> Importar Catálogo
       </a>
     </nav>
-    <div class="sidebar-footer">
-      <p>Sistema de Inventario</p>
-      <p>v1.0</p>
+    <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="exportarRespaldo()" style="background:rgba(249,115,22,0.15);color:var(--naranja);border:1px solid var(--naranja);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%">⬇ Exportar Respaldo</button>
+      <label style="background:rgba(255,255,255,0.05);color:var(--texto-2);border:1px solid var(--borde);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;text-align:center">
+        ⬆ Restaurar Respaldo
+        <input type="file" accept=".json" onchange="restaurarRespaldo(event)" style="display:none">
+      </label>
+      <p style="margin:0">Sistema de Inventario</p>
+      <p style="margin:0">v1.0</p>
     </div>
   </aside>
 
