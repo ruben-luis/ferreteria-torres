@@ -115,8 +115,11 @@ function restaurarRespaldo(event) {
     try {
       const datos = JSON.parse(e.target.result);
       if (!Array.isArray(datos)) throw new Error();
+      ['ferreteriaProductos','ferreteriaVentas','ferreteriaCortes',
+       'ferreteriaOrdenes','ferreteriaOrdenFolio','ferreteriaPagosProveedores',
+       'ferreteriaFolioVenta'].forEach(k => localStorage.removeItem(k));
       localStorage.setItem('ferreteriaProductos', JSON.stringify(datos));
-      toast('Inventario restaurado. Recargando...', 'ok', 2000);
+      toast('Inventario cargado. Recargando...', 'ok', 2000);
       setTimeout(() => location.reload(), 2000);
     } catch { toast('Archivo inválido', 'error'); }
   };
