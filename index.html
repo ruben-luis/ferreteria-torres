@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario — Ferretería Las Torres</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.jpeg" class="sidebar-logo-img" alt="Logo Las Torres">
+      <div>
+        <p class="logo-nombre">Las Torres</p>
+        <p class="logo-sub">Tlapalería y Ferretería</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item activo" data-vista="dashboard">
+        <span class="nav-icono">📊</span> Dashboard
+      </a>
+      <a href="#" class="nav-item" data-vista="inventario">
+        <span class="nav-icono">📦</span> Inventario
+      </a>
+      <a href="#" class="nav-item" data-vista="pos">
+        <span class="nav-icono">🛒</span> Punto de Venta
+      </a>
+      <a href="#" class="nav-item" data-vista="ventas">
+        <span class="nav-icono">📈</span> Historial de Ventas
+      </a>
+      <a href="#" class="nav-item" data-vista="caja">
+        <span class="nav-icono">💵</span> Corte de Caja
+      </a>
+      <a href="#" class="nav-item" data-vista="compras">
+        <span class="nav-icono">🛍️</span> Órdenes de Compra
+      </a>
+      <a href="#" class="nav-item" data-vista="alertas">
+        <span class="nav-icono">⚠️</span> Alertas de Stock
+        <span class="badge" id="badge-alertas">0</span>
+      </a>
+      <a href="importar.html" class="nav-item" style="margin-top:8px;border-top:1px solid var(--borde);padding-top:14px">
+        <span class="nav-icono">📥</span> Importar Catálogo
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <p>Sistema de Inventario</p>
+      <p>v1.0</p>
+    </div>
+  </aside>
+
+  <!-- ===== CONTENIDO PRINCIPAL ===== -->
+  <main class="main">
+
+    <!-- HEADER -->
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-titulo" id="titulo-vista">Dashboard</h1>
+        <p class="topbar-fecha" id="fecha-hoy"></p>
+      </div>
+    </header>
+
+    <!-- ===== VISTA: DASHBOARD ===== -->
+    <section class="vista" id="vista-dashboard">
+
+      <div class="metricas">
+        <div class="metrica-card">
+          <div class="metrica-icono naranja">📦</div>
+          <div>
+            <p class="metrica-valor" id="total-productos">0</p>
+            <p class="metrica-label">Productos registrados</p>
+          </div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-icono verde">💰</div>
+          <div>
+            <p class="metrica-valor" id="valor-inventario">$0</p>
+            <p class="metrica-label">Valor del inventario</p>
+          </div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-icono rojo">⚠️</div>
+          <div>
+            <p class="metrica-valor" id="total-alertas">0</p>
+            <p class="metrica-label">Productos con stock bajo</p>
+          </div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-icono azul">🏷️</div>
+          <div>
+            <p class="metrica-valor" id="total-categorias">0</p>
+            <p class="metrica-label">Categorías activas</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3 class="card-titulo">Productos con stock crítico</h3>
+          <div id="lista-criticos" class="lista-criticos"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-titulo">Últimos productos agregados</h3>
+          <div id="lista-recientes" class="lista-recientes"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== VISTA: INVENTARIO ===== -->
+    <section class="vista oculto" id="vista-inventario">
+
+      <div class="barra-filtros">
+        <input type="text" id="buscador" placeholder="🔍  Buscar producto..." class="input-buscar">
+        <select id="filtro-categoria" class="select-filtro">
+          <option value="">Todas las categorías</option>
+          <option>Herramientas</option>
+          <option>Tornillería y Clavos</option>
+          <option>Eléctrico</option>
+          <option>Plomería</option>
+          <option>Pintura y Acabados</option>
+          <option>Construcción</option>
+          <option>Jardinería</option>
+          <option>Seguridad</option>
+          <option>Protección Personal</option>
+        </select>
+        <select id="filtro-stock" class="select-filtro">
+          <option value="">Todo el stock</option>
+          <option value="ok">Stock normal</option>
+          <option value="bajo">Stock bajo</option>
+          <option value="critico">Stock crítico</option>
+        </select>
+        <button class="btn-agregar" id="btn-abrir-modal">+ Agregar Producto</button>
+        <button class="btn-exportar" id="btn-exportar">⬇ Exportar CSV</button>
+      </div>
+
+      <div class="tabla-wrap">
+        <table class="tabla" id="tabla-inventario">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Cant.</th>
+              <th>Und.</th>
+              <th>Precio</th>
+              <th>Valor</th>
+              <th>Proveedor</th>
+              <th>Mín.</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-tabla"></tbody>
+        </table>
+        <p class="tabla-vacia oculto" id="tabla-vacia">No se encontraron productos.</p>
+        <div class="pag-inv" id="pag-inv"></div>
+      </div>
+
+    </section>
+
+    <!-- ===== VISTA: PUNTO DE VENTA ===== -->
+    <section class="vista oculto" id="vista-pos">
+      <div class="pos-layout">
+
+        <!-- PRODUCTOS -->
+        <div class="pos-productos">
+          <input type="text" id="pos-buscador" placeholder="🔍  Buscar producto..." class="input-buscar">
+          <div class="pos-categorias" id="pos-categorias"></div>
+          <div class="pos-grid" id="pos-grid"></div>
+        </div>
+
+        <!-- CARRITO -->
+        <div class="pos-carrito">
+          <h3 class="carrito-titulo">🛒 Carrito de venta</h3>
+          <div class="carrito-items" id="carrito-items">
+            <p class="carrito-vacio">Selecciona productos del panel izquierdo</p>
+          </div>
+          <div class="carrito-resumen">
+            <div class="resumen-fila">
+              <span>Subtotal</span>
+              <span id="carrito-subtotal">$0.00</span>
+            </div>
+            <div class="resumen-fila total">
+              <span>Total</span>
+              <span id="carrito-total">$0.00</span>
+            </div>
+            <div class="pago-metodo">
+              <p class="pago-label">Método de pago</p>
+              <div class="pago-opciones">
+                <label class="pago-opcion">
+                  <input type="radio" name="metodo-pago" value="efectivo" checked>
+                  <span>💵 Efectivo</span>
+                </label>
+                <label class="pago-opcion">
+                  <input type="radio" name="metodo-pago" value="tarjeta">
+                  <span>💳 Tarjeta</span>
+                </label>
+                <label class="pago-opcion">
+                  <input type="radio" name="metodo-pago" value="transferencia">
+                  <span>📲 Transferencia</span>
+                </label>
+              </div>
+            </div>
+            <button class="btn-cobrar" id="btn-cobrar">Cobrar venta</button>
+            <button class="btn-limpiar" id="btn-limpiar">Limpiar carrito</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== VISTA: HISTORIAL DE VENTAS ===== -->
+    <section class="vista oculto" id="vista-ventas">
+      <div class="ventas-resumen" id="ventas-resumen"></div>
+      <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap">
+        <button class="btn-exportar" id="btn-excel-semanal">📊 Excel semanal</button>
+        <button class="btn-exportar" id="btn-excel-mensual">📊 Excel mensual</button>
+      </div>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Fecha y hora</th>
+              <th>Productos</th>
+              <th>Arts.</th>
+              <th>Pago</th>
+              <th>Total</th>
+              <th>Documentos</th>
+            </tr>
+          </thead>
+          <tbody id="historial-body"></tbody>
+        </table>
+        <p class="tabla-vacia oculto" id="historial-vacio">No hay ventas registradas aún.</p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: CORTE DE CAJA ===== -->
+    <section class="vista oculto" id="vista-caja">
+
+      <div class="caja-grid">
+
+        <!-- Resumen del día -->
+        <div class="card">
+          <h3 class="card-titulo">📅 Resumen de hoy</h3>
+          <div id="caja-resumen-hoy"></div>
+          <div class="caja-acciones">
+            <button class="btn-cerrar-caja" id="btn-cerrar-caja">Cerrar caja del día</button>
+          </div>
+        </div>
+
+        <!-- Ventas del día -->
+        <div class="card">
+          <h3 class="card-titulo">🧾 Ventas de hoy</h3>
+          <div id="caja-ventas-hoy" class="lista-criticos"></div>
+        </div>
+
+      </div>
+
+      <!-- Pago a proveedores -->
+      <div class="card" style="margin-top:14px">
+        <h3 class="card-titulo">🏭 Pago a Proveedores — Hoy</h3>
+        <div class="pago-prov-form">
+          <input type="text" id="prov-nombre" placeholder="Nombre del proveedor" class="input-prov">
+          <input type="number" id="prov-monto" placeholder="Monto $" class="input-prov" min="0" step="0.01">
+          <button class="btn-agregar" id="btn-add-pago-prov">+ Registrar</button>
+        </div>
+        <div id="lista-pagos-prov"></div>
+      </div>
+
+      <!-- Resumen semanal -->
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h3 class="card-titulo" style="margin-bottom:0">📊 Resumen Semanal</h3>
+          <button class="btn-exportar" id="btn-pdf-semanal">⬇ Descargar PDF</button>
+        </div>
+        <div id="resumen-semanal"></div>
+      </div>
+
+      <!-- Historial de cortes -->
+      <div class="card" style="margin-top:14px">
+        <h3 class="card-titulo">📋 Historial de cortes</h3>
+        <div class="tabla-wrap" style="border:none;border-radius:0">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Ventas</th>
+                <th>Artículos</th>
+                <th>Total ventas</th>
+                <th>Pagos proveed.</th>
+                <th>Neto del día</th>
+                <th>Cerrado por</th>
+              </tr>
+            </thead>
+            <tbody id="historial-cortes"></tbody>
+          </table>
+          <p class="tabla-vacia oculto" id="cortes-vacio">No hay cortes registrados.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== VISTA: ÓRDENES DE COMPRA ===== -->
+    <section class="vista oculto" id="vista-compras">
+
+      <div class="compras-header">
+        <div>
+          <p class="compras-sub">Selecciona un proveedor, ajusta cantidades y genera la orden en PDF</p>
+        </div>
+        <button class="btn-agregar" id="btn-nueva-orden">📄 Generar orden PDF</button>
+      </div>
+
+      <!-- Filtro de proveedores -->
+      <div id="compras-prov-filtro" style="margin-bottom:14px"></div>
+
+      <!-- Productos a pedir -->
+      <div class="card" style="margin-bottom:14px">
+        <h3 class="card-titulo" id="compras-card-titulo">⚠️ Productos que necesitan reabastecimiento</h3>
+        <div class="tabla-wrap" style="border:none;border-radius:0">
+          <table class="tabla" id="tabla-reabasto">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Stock actual</th>
+                <th>Stock mín.</th>
+                <th>Cant. a pedir</th>
+                <th>Proveedor</th>
+                <th>✓</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-reabasto"></tbody>
+          </table>
+          <p class="tabla-vacia oculto" id="reabasto-vacio">✅ Todos los productos tienen stock suficiente.</p>
+        </div>
+        <div class="pag-inv" id="pag-reabasto"></div>
+      </div>
+
+      <!-- Recibir Mercancía -->
+      <div class="card" style="margin-bottom:14px">
+        <h3 class="card-titulo">📥 Recibir Mercancía</h3>
+        <p style="font-size:12px;color:var(--texto-gris);margin-bottom:10px">Ingresa el número de orden para registrar automáticamente la mercancía recibida en el inventario.</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="input-recibir-orden" placeholder="Número de orden (ej. OC-0001)" class="input-buscar" style="max-width:280px">
+          <button class="btn-agregar" id="btn-buscar-orden">🔍 Buscar orden</button>
+        </div>
+        <div id="recibir-detalle"></div>
+      </div>
+
+      <!-- Historial de órdenes -->
+      <div class="card">
+        <h3 class="card-titulo">📦 Órdenes generadas</h3>
+        <div id="lista-ordenes" class="lista-criticos"></div>
+        <p class="dash-vacío oculto" id="ordenes-vacio">No hay órdenes generadas aún.</p>
+      </div>
+
+    </section>
+
+    <!-- ===== VISTA: ALERTAS ===== -->
+    <section class="vista oculto" id="vista-alertas">
+      <div id="lista-alertas" class="alertas-grid"></div>
+      <div class="pag-inv" id="pag-alertas"></div>
+      <p class="sin-alertas oculto" id="sin-alertas">✅ Todo el stock está en niveles normales.</p>
+    </section>
+
+  </main>
+
+  <!-- ===== MODAL AGREGAR / EDITAR ===== -->
+  <div class="modal-overlay oculto" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-titulo">Agregar Producto</h2>
+        <button class="modal-cerrar" id="btn-cerrar-modal">✕</button>
+      </div>
+      <form id="form-producto" class="modal-form">
+        <input type="hidden" id="producto-id">
+        <div class="form-grid">
+          <div class="campo">
+            <label>Nombre del producto *</label>
+            <input type="text" id="campo-nombre" placeholder="Ej. Martillo de carpintero" required>
+          </div>
+          <div class="campo">
+            <label>Categoría *</label>
+            <select id="campo-categoria" required>
+              <option value="">Seleccionar...</option>
+              <option>Herramientas</option>
+              <option>Tornillería y Clavos</option>
+              <option>Eléctrico</option>
+              <option>Plomería</option>
+              <option>Pintura y Acabados</option>
+              <option>Construcción</option>
+              <option>Jardinería</option>
+              <option>Seguridad</option>
+              <option>Protección Personal</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Cantidad *</label>
+            <input type="number" id="campo-cantidad" placeholder="0" min="0" required>
+          </div>
+          <div class="campo">
+            <label>Unidad</label>
+            <select id="campo-unidad">
+              <option>pza</option>
+              <option>kg</option>
+              <option>lt</option>
+              <option>m</option>
+              <option>caja</option>
+              <option>rollo</option>
+              <option>par</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Precio unitario ($) *</label>
+            <input type="number" id="campo-precio" placeholder="0.00" min="0" step="0.01" required>
+          </div>
+          <div class="campo">
+            <label>Stock mínimo *</label>
+            <input type="number" id="campo-stock-min" placeholder="5" min="0" required>
+          </div>
+          <div class="campo">
+            <label>Proveedor</label>
+            <input type="text" id="campo-proveedor" placeholder="Nombre del proveedor">
+          </div>
+          <div class="campo">
+            <label>Código / SKU <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--texto-gris)">(opcional)</span></label>
+            <input type="text" id="campo-codigo" placeholder="Ej. 12345">
+          </div>
+        </div>
+        <div class="modal-acciones">
+          <button type="button" class="btn-cancelar" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn-guardar">Guardar producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CONFIRMACIÓN ELIMINAR ===== -->
+  <div class="modal-overlay oculto" id="modal-eliminar">
+    <div class="modal modal-chico">
+      <div class="modal-header">
+        <h2>Eliminar producto</h2>
+        <button class="modal-cerrar" id="btn-cerrar-eliminar">✕</button>
+      </div>
+      <p class="eliminar-texto">¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.</p>
+      <div class="modal-acciones">
+        <button class="btn-cancelar" id="btn-cancelar-eliminar">Cancelar</button>
+        <button class="btn-eliminar-confirmar" id="btn-confirmar-eliminar">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
