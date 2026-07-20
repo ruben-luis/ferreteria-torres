@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — Ferretería Las Torres</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --naranja:#f97316;--naranja-dark:#ea580c;
+      --bg:#0f172a;--card:#1e293b;--borde:#334155;
+      --texto:#f1f5f9;--texto-gris:#94a3b8;
+      --verde:#22c55e;--rojo:#ef4444;
+    }
+    body{
+      font-family:'Inter',sans-serif;background:var(--bg);color:var(--texto);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      padding:16px;
+    }
+    .login-card{
+      background:var(--card);border:1px solid var(--borde);border-radius:16px;
+      padding:40px 36px;width:100%;max-width:400px;
+    }
+    .login-logo{
+      display:flex;align-items:center;gap:12px;margin-bottom:32px;
+    }
+    .login-logo img{
+      width:52px;height:52px;border-radius:12px;object-fit:cover;
+      border:2px solid rgba(249,115,22,0.4);
+    }
+    .login-logo-txt p:first-child{
+      font-size:17px;font-weight:700;color:var(--texto);
+    }
+    .login-logo-txt p:last-child{
+      font-size:11px;color:var(--texto-gris);margin-top:1px;
+    }
+    h2{font-size:20px;font-weight:700;margin-bottom:6px}
+    .login-sub{font-size:12px;color:var(--texto-gris);margin-bottom:28px}
+    .campo{margin-bottom:18px}
+    label{
+      display:block;font-size:11px;font-weight:600;
+      text-transform:uppercase;letter-spacing:.6px;
+      color:var(--texto-gris);margin-bottom:6px;
+    }
+    input{
+      width:100%;background:#0f172a;border:1px solid var(--borde);
+      border-radius:8px;padding:10px 14px;color:var(--texto);
+      font-family:'Inter',sans-serif;font-size:13px;
+      transition:border-color .2s;outline:none;
+    }
+    input:focus{border-color:var(--naranja)}
+    .btn-login{
+      width:100%;background:var(--naranja);color:#fff;border:none;
+      border-radius:8px;padding:12px;font-size:14px;font-weight:700;
+      cursor:pointer;transition:background .2s;margin-top:8px;
+      font-family:'Inter',sans-serif;
+    }
+    .btn-login:hover{background:var(--naranja-dark)}
+    .btn-login:disabled{opacity:.5;cursor:not-allowed}
+    .error-msg{
+      background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);
+      border-radius:8px;padding:10px 14px;font-size:12px;color:var(--rojo);
+      margin-top:16px;display:none;
+    }
+    .error-msg.visible{display:block}
+    .login-footer{
+      text-align:center;font-size:11px;color:var(--texto-gris);
+      margin-top:28px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo.jpeg" alt="Logo Las Torres">
+      <div class="login-logo-txt">
+        <p>Las Torres</p>
+        <p>Tlapalería y Ferretería</p>
+      </div>
+    </div>
+    <h2>Iniciar sesión</h2>
+    <p class="login-sub">Ingresa tus credenciales para continuar</p>
+    <form id="form-login">
+      <div class="campo">
+        <label>Correo electrónico</label>
+        <input type="email" id="login-email" placeholder="tu@correo.com" required autocomplete="email">
+      </div>
+      <div class="campo">
+        <label>Contraseña</label>
+        <input type="password" id="login-pass" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login" id="btn-login">Entrar</button>
+      <div class="error-msg" id="login-error"></div>
+    </form>
+    <p class="login-footer">Sistema de Inventario v2.0</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
+      from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTv8yZldJqGRQSbXXOHHoJYGlXeIIUM3s",
+      authDomain: "ferreteria-torres-4ad7c.firebaseapp.com",
+      projectId: "ferreteria-torres-4ad7c",
+      storageBucket: "ferreteria-torres-4ad7c.firebasestorage.app",
+      messagingSenderId: "692226990938",
+      appId: "1:692226990938:web:bed94d52959c1af5874963"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Si ya está logueado, redirigir directo
+    onAuthStateChanged(auth, user => {
+      if (user) window.location.href = 'index.html';
+    });
+
+    const form  = document.getElementById('form-login');
+    const btn   = document.getElementById('btn-login');
+    const errEl = document.getElementById('login-error');
+
+    const errores = {
+      'auth/invalid-credential':       'Correo o contraseña incorrectos.',
+      'auth/user-not-found':            'No existe una cuenta con ese correo.',
+      'auth/wrong-password':            'Contraseña incorrecta.',
+      'auth/too-many-requests':         'Demasiados intentos. Espera un momento.',
+      'auth/network-request-failed':    'Sin conexión a internet.',
+      'auth/invalid-email':             'El correo no tiene un formato válido.',
+    };
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-pass').value;
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+      errEl.classList.remove('visible');
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        window.location.href = 'index.html';
+      } catch (err) {
+        errEl.textContent = errores[err.code] || 'Error al iniciar sesión. Intenta de nuevo.';
+        errEl.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      }
+    });
+  </script>
+</body>
+</html>

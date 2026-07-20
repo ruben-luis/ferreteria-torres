@@ -6,8 +6,72 @@
   <title>Inventario — Ferretería Las Torres</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    #cargando-overlay{
+      position:fixed;inset:0;background:#0f172a;
+      display:flex;align-items:center;justify-content:center;
+      z-index:9999;flex-direction:column;gap:16px;
+    }
+    #cargando-overlay .spinner{
+      width:48px;height:48px;border:3px solid #334155;
+      border-top-color:#f97316;border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+    #cargando-overlay p{color:#94a3b8;font-size:13px;font-family:'Inter',sans-serif}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .sidebar-usuario{
+      display:flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,0.04);border:1px solid #334155;
+      border-radius:8px;padding:8px 10px;margin-bottom:6px;
+    }
+    .sidebar-usuario .u-avatar{
+      width:28px;height:28px;border-radius:50%;
+      background:#f97316;display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+    }
+    #usuario-info{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .btn-logout{
+      width:100%;background:rgba(239,68,68,0.12);color:#ef4444;
+      border:1px solid rgba(239,68,68,0.3);border-radius:8px;
+      padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:background .2s;
+    }
+    .btn-logout:hover{background:rgba(239,68,68,0.22)}
+    .btn-migrar{
+      width:100%;background:rgba(34,197,94,0.1);color:#22c55e;
+      border:1px solid rgba(34,197,94,0.3);border-radius:8px;
+      padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:background .2s;display:none;
+    }
+    .btn-migrar:hover{background:rgba(34,197,94,0.2)}
+
+    /* Config section */
+    .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:600px){.config-grid{grid-template-columns:1fr}}
+    .config-campo{display:flex;flex-direction:column;gap:5px}
+    .config-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8}
+    .config-campo input{
+      background:#0f172a;border:1px solid #334155;border-radius:8px;
+      padding:9px 12px;color:#f1f5f9;font-family:'Inter',sans-serif;
+      font-size:13px;outline:none;transition:border-color .2s;
+    }
+    .config-campo input:focus{border-color:#f97316}
+    #form-config .btn-guardar{
+      background:#f97316;color:#fff;border:none;border-radius:8px;
+      padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:background .2s;margin-top:8px;
+    }
+    #form-config .btn-guardar:hover{background:#ea580c}
+  </style>
 </head>
 <body>
+
+  <!-- ===== OVERLAY DE CARGA ===== -->
+  <div id="cargando-overlay">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
 
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
@@ -22,37 +86,45 @@
       <a href="#" class="nav-item activo" data-vista="dashboard">
         <span class="nav-icono">📊</span> Dashboard
       </a>
-      <a href="#" class="nav-item" data-vista="inventario">
+      <a href="#" class="nav-item" data-vista="inventario" data-rol="admin">
         <span class="nav-icono">📦</span> Inventario
       </a>
       <a href="#" class="nav-item" data-vista="pos">
         <span class="nav-icono">🛒</span> Punto de Venta
       </a>
-      <a href="#" class="nav-item" data-vista="ventas">
+      <a href="#" class="nav-item" data-vista="ventas" data-rol="admin">
         <span class="nav-icono">📈</span> Historial de Ventas
       </a>
-      <a href="#" class="nav-item" data-vista="caja">
+      <a href="#" class="nav-item" data-vista="caja" data-rol="admin">
         <span class="nav-icono">💵</span> Corte de Caja
       </a>
-      <a href="#" class="nav-item" data-vista="compras">
+      <a href="#" class="nav-item" data-vista="compras" data-rol="admin">
         <span class="nav-icono">🛍️</span> Órdenes de Compra
       </a>
-      <a href="#" class="nav-item" data-vista="alertas">
+      <a href="#" class="nav-item" data-vista="alertas" data-rol="admin">
         <span class="nav-icono">⚠️</span> Alertas de Stock
         <span class="badge" id="badge-alertas">0</span>
       </a>
-      <a href="importar.html" class="nav-item" style="margin-top:8px;border-top:1px solid var(--borde);padding-top:14px">
+      <a href="#" class="nav-item" data-vista="config" data-rol="admin">
+        <span class="nav-icono">⚙️</span> Configuración
+      </a>
+      <a href="importar.html" class="nav-item" data-rol="admin" style="margin-top:8px;border-top:1px solid var(--borde);padding-top:14px">
         <span class="nav-icono">📥</span> Importar Catálogo
       </a>
     </nav>
     <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:6px">
-      <button onclick="exportarRespaldo()" style="background:rgba(249,115,22,0.15);color:var(--naranja);border:1px solid var(--naranja);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%">⬇ Exportar Respaldo</button>
-      <label style="background:rgba(255,255,255,0.05);color:var(--texto-2);border:1px solid var(--borde);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;text-align:center">
+      <div class="sidebar-usuario">
+        <div class="u-avatar">U</div>
+        <span id="usuario-info">Cargando...</span>
+      </div>
+      <button class="btn-logout" id="btn-logout">🚪 Cerrar sesión</button>
+      <button class="btn-migrar" id="btn-migrar" data-rol="admin">📦 Migrar datos locales</button>
+      <button onclick="exportarRespaldo()" style="background:rgba(249,115,22,0.15);color:var(--naranja);border:1px solid var(--naranja);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%;font-family:'Inter',sans-serif" data-rol="admin">⬇ Exportar Respaldo</button>
+      <label style="background:rgba(255,255,255,0.05);color:var(--texto-2);border:1px solid var(--borde);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;text-align:center;font-family:'Inter',sans-serif" data-rol="admin">
         ⬆ Restaurar Respaldo
         <input type="file" accept=".json" onchange="restaurarRespaldo(event)" style="display:none">
       </label>
-      <p style="margin:0">Sistema de Inventario</p>
-      <p style="margin:0">v1.0</p>
+      <p style="margin:0;font-size:10px;color:var(--texto-gris);text-align:center">Sistema de Inventario v2.0</p>
     </div>
   </aside>
 
@@ -373,6 +445,45 @@
       <p class="sin-alertas oculto" id="sin-alertas">✅ Todo el stock está en niveles normales.</p>
     </section>
 
+    <!-- ===== VISTA: CONFIGURACIÓN ===== -->
+    <section class="vista oculto" id="vista-config">
+      <div class="card">
+        <h3 class="card-titulo">🏢 Datos de la empresa</h3>
+        <p style="font-size:12px;color:var(--texto-gris);margin-bottom:18px">Esta información aparecerá en todos los PDF generados (notas de venta, órdenes de compra, resúmenes semanales).</p>
+        <form id="form-config">
+          <div class="config-grid">
+            <div class="config-campo">
+              <label>Nombre de la empresa *</label>
+              <input type="text" id="config-nombre" placeholder="Ej. Ferretería Las Torres" required>
+            </div>
+            <div class="config-campo">
+              <label>Subtítulo / Giro</label>
+              <input type="text" id="config-subtitulo" placeholder="Ej. Tlapalería y Ferretería">
+            </div>
+            <div class="config-campo">
+              <label>Dirección</label>
+              <input type="text" id="config-direccion" placeholder="Ej. Av. Principal #123, Col. Centro">
+            </div>
+            <div class="config-campo">
+              <label>Teléfono</label>
+              <input type="text" id="config-telefono" placeholder="Ej. (33) 1234-5678">
+            </div>
+            <div class="config-campo">
+              <label>RFC</label>
+              <input type="text" id="config-rfc" placeholder="Ej. XXXX000000XX0">
+            </div>
+            <div class="config-campo">
+              <label>IVA (%)</label>
+              <input type="number" id="config-iva" placeholder="16" min="0" max="100" step="0.1" value="16">
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <button type="submit" class="btn-guardar">💾 Guardar configuración</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
   </main>
 
   <!-- ===== MODAL AGREGAR / EDITAR ===== -->
@@ -460,6 +571,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
