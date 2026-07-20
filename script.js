@@ -206,20 +206,45 @@ async function restaurarRespaldo(event) {
   const reader = new FileReader();
   reader.onload = async e => {
     try {
-      const datos = JSON.parse(e.target.result);
-      if (typeof datos !== 'object' || Array.isArray(datos)) throw new Error();
-      toast('Restaurando respaldo… por favor espera.', 'ok', 10000);
+      let parsed = JSON.parse(e.target.result);
+      if (!parsed) throw new Error('JSON vacío');
+
+      // Normalizar formato: si es array plano de productos, envolver
+      let datos;
+      if (Array.isArray(parsed)) {
+        datos = { productos: parsed, ventas: [], cortes: [], ordenes: [], pagosProveedor: [] };
+      } else if (typeof parsed === 'object') {
+        // Puede tener claves antiguas como ferreteriaProductos
+        datos = {
+          productos:      parsed.productos      || parsed.ferreteriaProductos      || [],
+          ventas:         parsed.ventas         || parsed.ferreteriaVentas         || [],
+          cortes:         parsed.cortes         || parsed.ferreteriaCortes         || [],
+          ordenes:        parsed.ordenes        || parsed.ferreteriaOrdenes        || [],
+          pagosProveedor: parsed.pagosProveedor || parsed.ferreteriaPagosProveedor || [],
+        };
+      } else {
+        throw new Error('Formato no reconocido');
+      }
+
+      const totalItems = Object.values(datos).reduce((s, a) => s + a.length, 0);
+      if (totalItems === 0) { toast('El archivo no contiene datos válidos.', 'error'); return; }
+
+      toast(`Restaurando ${datos.productos.length} productos… por favor espera.`, 'ok', 15000);
       mostrarCargando(true);
 
-      const batch = writeBatch(db);
       const cols = ['productos','ventas','cortes','ordenes','pagosProveedor'];
 
-      // Eliminar documentos existentes
+      // Eliminar documentos existentes en lotes de 500
       for (const col of cols) {
         const snap = await getDocs(collection(db, col));
-        snap.docs.forEach(d => batch.delete(d.ref));
+        const chunks = [];
+        for (let i = 0; i < snap.docs.length; i += 490) chunks.push(snap.docs.slice(i, i + 490));
+        for (const chunk of chunks) {
+          const b = writeBatch(db);
+          chunk.forEach(d => b.delete(d.ref));
+          await b.commit();
+        }
       }
-      await batch.commit();
 
       // Insertar datos del respaldo
       for (const col of cols) {
@@ -232,7 +257,10 @@ async function restaurarRespaldo(event) {
 
       toast('Respaldo restaurado. Recargando...', 'ok', 2000);
       setTimeout(() => location.reload(), 2000);
-    } catch { toast('Archivo inválido o error al restaurar', 'error'); mostrarCargando(false); }
+    } catch (err) {
+      toast('Error al restaurar: ' + (err.message || 'archivo inválido'), 'error', 6000);
+      mostrarCargando(false);
+    }
   };
   reader.readAsText(file);
 }
