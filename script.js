@@ -224,6 +224,7 @@ function navegarA(vista) {
   };
   document.getElementById('titulo-vista').textContent = titulos[vista] || vista;
 
+  if (vista === 'dashboard') { renderMetricas(); renderDashboard(); }
   if (vista === 'inventario') renderTabla();
   if (vista === 'pos') renderPos();
   if (vista === 'ventas') renderHistorial();
@@ -312,8 +313,17 @@ function renderDashboard() {
 let _tablaFiltrados = [];
 
 function renderTabla() {
+  // Actualizar opciones del filtro con las categorías reales del inventario
+  const selectCat = document.getElementById('filtro-categoria');
+  const catSeleccionada = selectCat.value;
+  const catsRegistradas = [...new Set(productos.map(p => p.categoria))].sort();
+  const categoriasBase = ['Herramientas','Tornillería y Clavos','Eléctrico','Plomería','Pintura y Acabados','Construcción','Jardinería','Seguridad','Protección Personal'];
+  const todasLasCats = [...new Set([...categoriasBase, ...catsRegistradas])].sort();
+  selectCat.innerHTML = '<option value="">Todas las categorías</option>' +
+    todasLasCats.map(c => `<option${catSeleccionada === c ? ' selected' : ''}>${c}</option>`).join('');
+
   const busqueda  = document.getElementById('buscador').value.toLowerCase();
-  const catFiltro = document.getElementById('filtro-categoria').value;
+  const catFiltro = selectCat.value;
   const stockFiltro = document.getElementById('filtro-stock').value;
 
   _tablaFiltrados = productos.filter(p => {
@@ -617,7 +627,7 @@ function agregarAlCarrito(id) {
     if (enCarrito.qty >= prod.cantidad) return;
     enCarrito.qty++;
   } else {
-    carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, precioVenta: prod.precio, qty: 1, unidad: prod.unidad });
+    carrito.push({ id: prod.id, nombre: prod.nombre, codigo: prod.codigo || '', precio: prod.precio, precioVenta: prod.precio, qty: 1, unidad: prod.unidad });
   }
   renderCarrito();
 }
@@ -692,6 +702,15 @@ function renderCarrito() {
 
 function procesarVenta() {
   if (carrito.length === 0) return;
+
+  // Validar stock suficiente antes de cobrar
+  for (const item of carrito) {
+    const prod = productos.find(p => p.id === item.id);
+    if (prod && prod.cantidad < item.qty) {
+      toast(`Stock insuficiente: "${item.nombre}" — disponibles: ${prod.cantidad} ${item.unidad}`, 'error', 5000);
+      return;
+    }
+  }
 
   const metodoPago = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
 
@@ -1208,7 +1227,8 @@ function renderResumenSemanal() {
 
 function cerrarCaja() {
   const vh = ventasDeHoy();
-  if (vh.length === 0) { toast('No hay ventas hoy para registrar en el corte.', 'error'); return; }
+  const pagosHoy = pagosProvDeHoy();
+  if (vh.length === 0 && pagosHoy.length === 0) { toast('No hay actividad hoy para registrar en el corte.', 'error'); return; }
 
   const cortesHoy = cortes.filter(c => c.fecha === hoy());
   if (cortesHoy.length > 0) { toast('La caja ya fue cerrada hoy.', 'info'); return; }
