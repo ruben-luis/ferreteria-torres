@@ -555,11 +555,12 @@ function renderPosCategorias() {
   const cats = ['', ...new Set(productos.map(p => p.categoria))];
   const wrap = document.getElementById('pos-categorias');
   wrap.innerHTML = cats.map(c => `
-    <button class="cat-btn ${catActivaPos === c ? 'activo' : ''}"
-      data-cat="${c}"
-      onclick="filtrarCatPos('${c}')">
+    <button class="cat-btn ${catActivaPos === c ? 'activo' : ''}" data-cat="${c.replace(/"/g, '&quot;')}">
       ${c === '' ? 'Todos' : c}
     </button>`).join('');
+  wrap.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => filtrarCatPos(btn.dataset.cat));
+  });
 }
 
 function filtrarCatPos(cat) {
@@ -710,6 +711,13 @@ function procesarVenta() {
       toast(`Stock insuficiente: "${item.nombre}" — disponibles: ${prod.cantidad} ${item.unidad}`, 'error', 5000);
       return;
     }
+  }
+
+  // Advertir si algún artículo tiene precio $0
+  const conCero = carrito.filter(i => i.precioVenta === 0);
+  if (conCero.length > 0) {
+    const nombres = conCero.map(i => i.nombre).join(', ');
+    if (!confirm(`Los siguientes artículos tienen precio $0.00:\n\n${nombres}\n\n¿Deseas continuar?`)) return;
   }
 
   const metodoPago = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
@@ -1153,7 +1161,8 @@ function semanaActual() {
   const diasDesdeL = dow === 0 ? 6 : dow - 1;
   const pad = n => String(n).padStart(2, '0');
   const dias = [];
-  for (let i = 0; i <= diasDesdeL; i++) {
+  // Muestra los 7 días completos de la semana (Lun–Dom)
+  for (let i = 0; i < 7; i++) {
     const d = new Date(hoyDate);
     d.setDate(hoyDate.getDate() - diasDesdeL + i);
     dias.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
