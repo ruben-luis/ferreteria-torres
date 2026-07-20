@@ -171,6 +171,10 @@ async function siguienteOrdenFolio() {
 function aplicarRol() {
   if (usuarioRol === 'cajero') {
     document.querySelectorAll('[data-rol="admin"]').forEach(el => el.classList.add('oculto'));
+  } else {
+    // Mostrar botón de migración solo para admins
+    const btnMigrar = document.getElementById('btn-migrar');
+    if (btnMigrar) btnMigrar.style.display = 'block';
   }
 }
 function actualizarInfoUsuario() {
@@ -782,7 +786,8 @@ async function procesarVenta() {
     items: carrito.map(i => ({ ...i })),
     total: carrito.reduce((s, i) => s + i.precioVenta * i.qty, 0),
     metodoPago,
-    cajero: usuarioNombre
+    cajero: usuarioNombre,
+    iva: configEmpresa.iva ?? 16
   };
 
   const btn = document.getElementById('btn-cobrar');
@@ -875,7 +880,8 @@ async function generarNotaVenta(ventaId) {
   const fechaStr = fecha.toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
   const horaStr  = fecha.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
   const mpLabel  = { efectivo:'Efectivo', tarjeta:'Tarjeta', transferencia:'Transferencia' }[venta.metodoPago] || 'Efectivo';
-  const ivaRate  = (configEmpresa.iva || 16) / 100;
+  const ivaPct   = venta.iva ?? configEmpresa.iva ?? 16;
+  const ivaRate  = ivaPct / 100;
   const subtotalSinIva = venta.total / (1 + ivaRate);
   const iva = venta.total - subtotalSinIva;
 
@@ -914,9 +920,9 @@ async function generarNotaVenta(ventaId) {
   const lx = 130, rx = 196;
   doc.setDrawColor(220,220,220); doc.line(lx,ty,rx,ty); ty += 6;
   doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-  doc.text(`Subtotal (sin IVA ${configEmpresa.iva||16}%):`, lx, ty);
+  doc.text(`Subtotal (sin IVA ${ivaPct}%):`, lx, ty);
   doc.text('$' + subtotalSinIva.toLocaleString('es-MX',{minimumFractionDigits:2}), rx, ty, { align:'right' }); ty += 7;
-  doc.text(`IVA (${configEmpresa.iva||16}%):`, lx, ty);
+  doc.text(`IVA (${ivaPct}%):`, lx, ty);
   doc.text('$' + iva.toLocaleString('es-MX',{minimumFractionDigits:2}), rx, ty, { align:'right' }); ty += 2;
   doc.setDrawColor(249,115,22); doc.line(lx,ty,rx,ty); ty += 6;
   doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(34,120,60);
@@ -1524,7 +1530,8 @@ function imprimirTicket(ventaId) {
   const fechaStr = fecha.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
   const horaStr  = fecha.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
   const mpLabel  = { efectivo:'Efectivo', tarjeta:'Tarjeta', transferencia:'Transferencia' }[venta.metodoPago] || 'Efectivo';
-  const ivaRate  = (configEmpresa.iva || 16) / 100;
+  const ivaPct   = venta.iva ?? configEmpresa.iva ?? 16;
+  const ivaRate  = ivaPct / 100;
   const subtotalSinIva = venta.total / (1 + ivaRate);
   const iva = venta.total - subtotalSinIva;
   const itemsHtml = venta.items.map(item => {
@@ -1542,7 +1549,7 @@ function imprimirTicket(ventaId) {
 <div class="t-fila"><span>Pago:</span><span>${mpLabel}</span></div>
 <div class="t-sep"></div>${itemsHtml}<div class="t-sep"></div>
 <div class="t-fila t-det"><span>Subtotal s/IVA</span><span>$${subtotalSinIva.toFixed(2)}</span></div>
-<div class="t-fila t-det"><span>IVA ${configEmpresa.iva||16}%</span><span>$${iva.toFixed(2)}</span></div>
+<div class="t-fila t-det"><span>IVA ${ivaPct}%</span><span>$${iva.toFixed(2)}</span></div>
 <div class="t-fila grande"><span>TOTAL</span><span>$${venta.total.toFixed(2)}</span></div>
 <div class="t-pie"><div class="t-sep"></div><p>Gracias por su compra!</p><p>Conserve su ticket</p></div><br><br><br>
 </body></html>`;
