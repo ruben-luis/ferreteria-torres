@@ -3,7 +3,8 @@ import { initializeApp }       from 'https://www.gstatic.com/firebasejs/10.14.1/
 import { getAuth, onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {
-  getFirestore, collection, doc,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc,
   addDoc, setDoc, updateDoc, deleteDoc,
   getDoc, getDocs, query, orderBy,
   runTransaction, writeBatch
@@ -19,7 +20,11 @@ const firebaseConfig = {
 };
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getFirestore(app);
+// Caché local persistente — después del primer login, los datos se sirven
+// desde IndexedDB y solo se descargan los cambios nuevos (delta sync)
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
 
 // ===== CARGA DIFERIDA DE LIBRERÍAS (locales) =====
 const _scripts = {};
