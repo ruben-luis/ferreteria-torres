@@ -660,6 +660,10 @@ body {
   overflow-y: auto;
 }
 
+.pos-productos > .input-buscar {
+  flex: 0 0 auto;
+}
+
 .pos-categorias {
   display: flex;
   gap: 6px;
