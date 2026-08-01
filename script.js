@@ -460,7 +460,7 @@ function renderDashboard() {
 function renderTabla() {
   const selectCat = document.getElementById('filtro-categoria');
   const catSel = selectCat.value;
-  const base = ['Herramientas','Tornillería y Clavos','Eléctrico','Plomería','Pintura y Acabados','Construcción','Jardinería','Seguridad','Protección Personal'];
+  const base = ['Construcción','Eléctrico','Herramientas','Hogar','Jarcería','Jardinería','Pintura y Acabados','Plomería','Protección Personal','Seguridad','Tornillería y Clavos'];
   const todas = [...new Set([...base, ...productos.map(p => p.categoria)])].sort();
   selectCat.innerHTML = '<option value="">Todas las categorías</option>' +
     todas.map(c => `<option${catSel === c ? ' selected' : ''}>${c}</option>`).join('');
